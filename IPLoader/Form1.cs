@@ -46,37 +46,10 @@ namespace IPLoader
                 string area = item.Local == null ? string.Empty : item.Local.Trim();
                 string city = string.Empty;
 
-                if (country.IndexOf("CZ88", StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || country.IndexOf("纯真") >= 0)
-                {
-                    country = string.Empty;
-                    area = string.Empty;
-                }
-                if (area.IndexOf("CZ88", StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || area.IndexOf("纯真") >= 0)
-                {
-                    area = string.Empty;
-                }
                 if (string.IsNullOrEmpty(country))
                 {
-                    if (!string.IsNullOrEmpty(country) && country != "中国" && country == area)
-                    {
-                        continue;
-                    }
-                    if (country != area && area.Length > 4)
-                    {
-                        continue;
-                    }
                     country = SearchIp(Utils.LongToIP(ip1)).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[0];
                 }
-
-                //if (country.Contains("大学"))
-                //{
-                //    area = country.TrimStart('中', '国') + area;
-                //    country = "中国";
-                //}
-                //else
-                //    country = ProcessChinaLocal(country);
 
                 var isChina = handler.IsMainlandChina(country);
                 if (isChina)
@@ -95,15 +68,11 @@ namespace IPLoader
                     country = "中国香港";
                 }
 
-                if (country.Contains("IANA"))
-                {
-                    country = "IANA";
-                }
-                string content = string.Format("{0},{1},{2},{3},{4}\r\n", ip1, ip2, country, city, area);
+                string content = string.Format("{0},{1},{2},{3},{4}\r\n", ip1, ip2, country, city.Trim('/'), area);
                 sb.Append(content);
             }
-            File.WriteAllText(ipfilePathOut, sb.ToString(), Encoding.UTF8);
 
+            File.WriteAllText(ipfilePathOut, sb.ToString(), Encoding.UTF8);
         }
 
         static string[] data = new string[] { "北京", "天津", "河北", "山西", "内蒙古", "内蒙", "辽宁", "吉林", "黑龙江", "上海", "江苏", "浙江", "安徽", "福建", "江西", "山东", "河南", "湖北", "湖南", "广东", "广西", "海南", "重庆", "四川", "贵州", "云南", "西藏", "陕西", "甘肃", "青海", "宁夏", "新疆" };

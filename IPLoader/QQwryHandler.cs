@@ -82,6 +82,17 @@ namespace IPLoader
 
                     ipRecord.EndIpNumber = endIp;
 
+                    if (this.country.IndexOf("CZ88", StringComparison.CurrentCultureIgnoreCase) >= 0
+                   || this.country.IndexOf("纯真") >= 0)
+                    {
+                        this.country = string.Empty;
+                        this.local = string.Empty;
+                    }
+                    else if (this.country.Contains("IANA"))
+                    {
+                        this.country = "IANA";
+                    }
+
                     if (IsMainlandChina(this.country) && !string.IsNullOrEmpty(this.country) && !this.country.StartsWith("中国"))
                     {
                         ipRecord.Country = string.Concat("中国", this.country);
@@ -91,18 +102,59 @@ namespace IPLoader
                         ipRecord.Country = this.country;
                     }
 
+                    if (this.local.IndexOf("CZ88", StringComparison.CurrentCultureIgnoreCase) >= 0
+                        || this.local.IndexOf("纯真") >= 0)
+                    {
+                        this.local = string.Empty;
+                    }
 
-                    ipRecord.Local = this.local;
+                    ipRecord.Local = this.local.Trim('/');
                     ipRecords.Add(ipRecord);
 
                 }
                 ipRecords = ipRecords.OrderBy(m => m.StartIpNumber).ToList();
 
+                //记录合并操作
+                int idx = ipRecords.Count - 1;
+                int end = 1;
+                int itr = 0;
+
+            lbb:
+                itr++;
+                idx = ipRecords.Count - 1;
+                do
+                {
+                    idx--;
+                    var ips = ipRecords[idx];
+                    var pre = ipRecords[idx + 1];
+                    var next = ipRecords[idx - 1];
+                    if (ips.Country == pre.Country && ips.Local == pre.Local)
+                    {
+                        ips.EndIpNumber = pre.EndIpNumber;
+                        ipRecords.RemoveAt(idx + 1);
+                        continue;
+                    }
+                    if (ips.StartIpNumber == ips.EndIpNumber)
+                    {
+                        if (pre.Country == next.Country)
+                        {
+                            next.EndIpNumber = pre.EndIpNumber;
+                            ipRecords.RemoveAt(idx + 1);
+                            ipRecords.RemoveAt(idx);
+                        }
+                    }
+
+                } while (idx > end);
+                if (itr <= 1)
+                {
+                    goto lbb;
+                }
+
                 return ipRecords;
             }
             catch (Exception ex)
             {
-               // ServiceHub.AddLog(RuntimeLogType.Exception, this.GetType(), (string.Format("加载IP数据时出现异常：{0},{1}", ex.Message, ex.StackTrace)));
+                // ServiceHub.AddLog(RuntimeLogType.Exception, this.GetType(), (string.Format("加载IP数据时出现异常：{0},{1}", ex.Message, ex.StackTrace)));
                 throw;
             }
             finally
